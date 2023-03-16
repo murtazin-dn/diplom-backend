@@ -1,5 +1,6 @@
 package com.example.model
 
+import com.example.network.model.response.PostResponse
 import java.time.Instant
 
 data class Post(
@@ -8,7 +9,18 @@ data class Post(
     val title: String,
     val text: String,
     val categoryId: Long,
-    val timeAtCreation: Instant,
+    val timeAtCreation: Long,
     val likesCount: Long,
     val commentsCount: Long
-)
+){
+    fun toPostResponse() = PostResponse(
+        id = this.id,
+        userId = this.userId,
+        title = this.title,
+        text = this.text,
+        categoryId = this.categoryId,
+        timeAtCreation = this.timeAtCreation,
+        commentsCount = this.commentsCount,
+        likesCount = this.likesCount
+    )
+}

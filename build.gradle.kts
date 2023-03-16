@@ -1,9 +1,11 @@
 
 val ktor_version: String by project
+val koin_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
 val exposed_version: String by project
 val postgresql_version: String by project
+val bcrypt_version: String by project
 
 plugins {
     kotlin("jvm") version "1.8.10"
@@ -41,6 +43,9 @@ dependencies {
     //koin
     implementation("io.insert-koin:koin-ktor:$koin_version")
     implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
+
+    // Password encryption
+    implementation("org.mindrot:jbcrypt:$bcrypt_version")
 
     //exposed
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")

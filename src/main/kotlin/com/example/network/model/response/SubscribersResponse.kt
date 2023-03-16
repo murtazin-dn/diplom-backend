@@ -1,9 +1,9 @@
 package com.example.network.model.response
 
-import com.example.model.Message
+import com.example.model.UserInfo
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MessageListResponse(
-    val list: List<MessageResponse>
+data class SubscribersResponse(
+    val list: List<UserInfo>
 )

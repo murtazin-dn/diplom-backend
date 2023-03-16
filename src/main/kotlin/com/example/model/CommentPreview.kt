@@ -11,5 +11,6 @@ data class CommentPreview(
     val text: String,
     val userName: String,
     val userSurName: String,
-    val icon: String?
+    val icon: String?,
+    val doctorStatus: Boolean
 )

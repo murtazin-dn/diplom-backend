@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.database.DatabaseFactory
+import com.example.di.configureKoin
 import com.example.network.routing.configureAuthRouting
 import com.example.network.routing.configurePostRouting
 import com.example.network.routing.configureRouting
@@ -15,7 +16,7 @@ fun main(args: Array<String>): Unit =
 fun Application.module() {
 
     DatabaseFactory.init()
-
+    configureKoin()
     configureWebsocket()
     configureSerialization()
     configureMonitoring()

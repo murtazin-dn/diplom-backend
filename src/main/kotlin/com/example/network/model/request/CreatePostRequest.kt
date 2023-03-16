@@ -4,7 +4,7 @@ import com.example.model.Category
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CreatePostRequest (
+data class PostRequest (
     val title: String,
     val text: String,
     val categoryId: Long

@@ -1,9 +1,8 @@
 package com.example.database
 
-import com.example.database.model.users.*
+import com.example.database.model.*
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -19,11 +18,10 @@ object DatabaseFactory {
             SchemaUtils.create(Users)
             SchemaUtils.create(Posts)
             SchemaUtils.create(Categories)
-            SchemaUtils.create(Friends)
-            SchemaUtils.create(RequestsFriends)
             SchemaUtils.create(PostsLikes)
             SchemaUtils.create(Chats)
             SchemaUtils.create(Messages)
+            SchemaUtils.create(Subscribers)
         }
     }
 
