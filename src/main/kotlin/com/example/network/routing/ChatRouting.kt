@@ -17,7 +17,6 @@ fun Route.configureChatRouting() {
 
     val controller by inject<ChatController>()
 
-    authenticate("jwt") {
         route("/chats"){
             get("/chat/{chatId}"){
                 val response = controller.getChatByChatId(call)
@@ -32,5 +31,5 @@ fun Route.configureChatRouting() {
                 call.respond(response.code, response.body)
             }
         }
-    }
+
 }

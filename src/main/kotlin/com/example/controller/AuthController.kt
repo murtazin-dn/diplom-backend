@@ -6,11 +6,13 @@ import com.example.network.model.HttpResponse
 import com.example.network.model.request.SignInRequest
 import com.example.network.model.request.SignUpRequest
 import com.example.network.model.response.AuthResponse
+import com.example.network.model.response.EmailTakenResponse
 import com.example.secure.JwtTokenService
 import com.example.secure.PasswordEncryptor
 import com.example.utils.UnauthorizedActivityException
 import com.example.utils.isEmailValid
 import com.example.utils.isNameValid
+import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 
 class AuthControllerImpl: AuthController {
@@ -54,6 +56,20 @@ class AuthControllerImpl: AuthController {
             HttpResponse.badRequest(e.message.toString())
         } catch (e: UnauthorizedActivityException){
             HttpResponse.unauth(e.message)
+        }
+    }
+
+    override suspend fun findEmail(call: ApplicationCall): HttpResponse<Any> {
+        return try{
+            val email = call.parameters["email"] ?: throw BadRequestException("Param email is exists")
+            if(!email.isEmailValid()) throw BadRequestException("Invalid param email")
+            Users.getUserByEmail(email)?.let {
+                HttpResponse.ok(EmailTakenResponse(true))
+            } ?: HttpResponse.ok(EmailTakenResponse(false))
+        } catch (e: BadRequestException){
+            HttpResponse.badRequest(e.message.toString())
+        } catch (e: Exception){
+            HttpResponse.badRequest(e.message.toString())
         }
     }
 
@@ -101,4 +117,5 @@ class AuthControllerImpl: AuthController {
 interface AuthController {
     suspend fun signUp(signUpRequest: SignUpRequest): HttpResponse<Any>
     suspend fun signIn(signInRequest: SignInRequest): HttpResponse<Any>
+    suspend fun findEmail(call: ApplicationCall): HttpResponse<Any>
 }

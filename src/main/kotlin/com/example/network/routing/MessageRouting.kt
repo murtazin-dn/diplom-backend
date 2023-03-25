@@ -18,7 +18,6 @@ import org.koin.ktor.ext.inject
 
 fun Route.configureMessageRouting() {
     val controller by inject<MessagesController>()
-    authenticate("jwt") {
         route("chat/{chatId}/messages"){
             get{
                 val response = controller.getMessages(call)
@@ -28,5 +27,5 @@ fun Route.configureMessageRouting() {
         webSocket("/ws/chat/{chatId}") {
             controller.connect(call, this, incoming)
         }
-    }
+
 }

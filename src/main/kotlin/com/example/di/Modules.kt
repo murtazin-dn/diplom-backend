@@ -21,3 +21,6 @@ val chatModule = module {
 val messageModule = module {
     single<MessagesController> { MessagesControllerImpl() }
 }
+val categoryModule = module {
+    single<CategoriesController> { CategoriesControllerImpl() }
+}

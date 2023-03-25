@@ -26,5 +26,9 @@ fun Route.configureAuthRouting() {
         val response = controller.signIn(request)
         call.respond(response.code, response.body)
     }
+    get("/email/{email}") {
+        val response = controller.findEmail(call)
+        call.respond(response.code, response.body)
+    }
 
 }

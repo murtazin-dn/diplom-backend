@@ -21,7 +21,6 @@ fun Route.configurePostRouting() {
 
     val controller by inject<PostController>()
 
-    authenticate("jwt") {
         route("/posts"){
 
             route("/{postId}/likes"){
@@ -60,7 +59,4 @@ fun Route.configurePostRouting() {
                 call.respond(response.code, response.body)
             }
         }
-
-
-    }
 }

@@ -15,7 +15,6 @@ fun Route.configureUserInfoRouting() {
 
     val controller by inject<UserInfoController>()
 
-    authenticate("jwt") {
         route("/users/info"){
             get{
                 val response = controller.getMyUserInfo(call)
@@ -28,5 +27,5 @@ fun Route.configureUserInfoRouting() {
                 call.respond(response.code, response.body)
             }
         }
-    }
+
 }

@@ -11,7 +11,6 @@ fun Route.configureSubscribersRouting() {
 
     val controller by inject<SubscribersController>()
 
-    authenticate("jwt") {
         route("/subscribers") {
             get("/list"){
                 val response = controller.getSubscribers(call)
@@ -26,7 +25,7 @@ fun Route.configureSubscribersRouting() {
                 call.respond(response.code, response.body)
             }
 
-        }
+
     }
 
 }

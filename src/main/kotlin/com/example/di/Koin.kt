@@ -14,5 +14,6 @@ fun Application.configureKoin(){
         modules(userInfoModule)
         modules(chatModule)
         modules(messageModule)
+        modules(categoryModule)
     }
 }
