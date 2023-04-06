@@ -58,5 +58,10 @@ fun Route.configurePostRouting() {
                 val response = controller.getPostById(call)
                 call.respond(response.code, response.body)
             }
+
+            get{
+                val response = controller.getPosts(call)
+                call.respond(response.code, response.body)
+            }
         }
 }

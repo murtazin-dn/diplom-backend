@@ -57,6 +57,31 @@ class PostControllerImpl: PostController {
         }
     }
 
+    override suspend fun getPosts(call: ApplicationCall): HttpResponse<Any> {
+        return try {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Long::class)!!
+            call.request.queryParameters["userId"]?.toLongOrNull()?.let {
+                val posts = Posts.getPostsByUserId(it).map { post ->
+                    PostsLikes.selectPostLike(PostLike(post.id, userId))?.let {
+                        post.isLikeEnabled = true
+                    }
+                    post
+                }
+                return HttpResponse.ok(posts)
+            }
+            val posts = Posts.getPostsSubscribers(userId).map { post ->
+                PostsLikes.selectPostLike(PostLike(post.id, userId))?.let {
+                    post.isLikeEnabled = true
+                }
+                post
+            }
+            HttpResponse.ok(posts)
+        } catch (e: BadRequestException){
+            HttpResponse.badRequest(e.message)
+        }
+    }
+
     override suspend fun setLike(call: ApplicationCall): HttpResponse<Any> {
         return try {
             val principal = call.principal<JWTPrincipal>()
@@ -159,6 +184,7 @@ class PostControllerImpl: PostController {
 interface PostController{
     suspend fun createPost(postRequest: PostRequest, call: ApplicationCall): HttpResponse<Any>
     suspend fun getPostById(call: ApplicationCall): HttpResponse<Any>
+    suspend fun getPosts(call: ApplicationCall): HttpResponse<Any>
     suspend fun setLike(call: ApplicationCall): HttpResponse<Any>
     suspend fun unsetLike(call: ApplicationCall): HttpResponse<Any>
     suspend fun getLike(call: ApplicationCall): HttpResponse<Any>

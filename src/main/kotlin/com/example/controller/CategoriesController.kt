@@ -18,8 +18,7 @@ class CategoriesControllerImpl: CategoriesController {
                     name = category.name
                 )
             }
-            val response = CategoriesResponse(list)
-            HttpResponse.ok(response)
+            HttpResponse.ok(list)
         }catch (e: Exception){
             HttpResponse.badRequest(e.message.toString())
         }

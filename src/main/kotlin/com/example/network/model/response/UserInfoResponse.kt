@@ -7,7 +7,7 @@ data class UserInfoResponse(
     val id: Long,
     val name: String,
     val surname: String,
-    val category: String,
+    val category: CategoryResponse,
     val doctorStatus: Boolean,
     val icon: String?
 )

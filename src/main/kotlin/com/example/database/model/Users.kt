@@ -1,6 +1,7 @@
 package com.example.database.model
 
 import com.example.database.DatabaseFactory.dbQuery
+import com.example.model.Category
 import com.example.model.User
 import com.example.model.UserInfo
 import org.jetbrains.exposed.sql.*
@@ -28,10 +29,12 @@ object Users: Table("users") {
             it[categoryId] = user.categoryId
             it[doctorStatus] = false
             it[icon] = user.icon
-
-
         }
         insertStatement.resultedValues?.singleOrNull()?.let(Users::resultRowToUser)
+    }
+
+    suspend fun updatePhoto(userId: Long, photo: String): Boolean = dbQuery{
+        Users.update({ id eq userId }){ it[icon] = photo } > 0
     }
 
     suspend fun getUserByEmail(email: String): User? = dbQuery {
@@ -73,7 +76,10 @@ object Users: Table("users") {
         surname = row[surname],
         icon = row[icon],
         doctorStatus = row[doctorStatus],
-        category = row[Categories.name]
+        category = Category(
+            row[categoryId],
+            row[Categories.name]
+        )
     )
 
 }

@@ -1,11 +1,12 @@
 package com.example.database.model
 
 import com.example.database.DatabaseFactory.dbQuery
-import com.example.model.Post
+import com.example.model.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.Instant
+import javax.jws.soap.SOAPBinding.Use
 
 object Posts : Table("posts") {
     val id = long("id").autoIncrement()
@@ -45,6 +46,84 @@ object Posts : Table("posts") {
     }
 
 
+    suspend fun getPostsSubscribers(userId: Long): List<PostInfo> = dbQuery{
+        Join(
+            Posts, Subscribers,
+            onColumn = Posts.userId, otherColumn = Subscribers.subscriberId,
+            joinType = JoinType.INNER,
+            additionalConstraint = { Subscribers.userId eq userId})
+            .join(
+                Users, JoinType.INNER,
+                onColumn = Subscribers.subscriberId, otherColumn = Users.id
+            ).join(
+                Categories, JoinType.INNER,
+                onColumn = Posts.categoryId, otherColumn = Categories.id
+            ).selectAll().mapNotNull {
+                val user = UserInfo(
+                    id = it[Users.id],
+                    name = it[Users.name],
+                    surname = it[Users.surname],
+                    icon = it[Users.icon],
+                    doctorStatus = it[Users.doctorStatus],
+                    category = Category(
+                        it[Users.categoryId],
+                        Categories.getCategoryById(it[Users.categoryId])!!.name
+                    )
+                )
+                PostInfo(
+                    id = it[id],
+                    user = user,
+                    title = it[title],
+                    text = it[text],
+                    category = Category(
+                        it[categoryId],
+                        it[Categories.name]
+                    ),
+                    timeAtCreation = it[timeAtCreation].toEpochMilli(),
+                    likesCount = it[likesCount],
+                    commentsCount = it[commentsCount],
+                    isLikeEnabled = false
+                )
+            }
+    }
+
+    suspend fun getPostsByUserId(userId: Long): List<PostInfo> = dbQuery{
+        Join(
+            Posts, Users,
+            onColumn = Posts.userId, otherColumn = Users.id,
+            joinType = JoinType.INNER)
+            .join(
+                Categories, JoinType.INNER,
+                onColumn = Posts.categoryId, otherColumn = Categories.id,
+            ).select(Posts.userId eq userId).mapNotNull {
+                val user = UserInfo(
+                    id = it[Users.id],
+                    name = it[Users.name],
+                    surname = it[Users.surname],
+                    icon = it[Users.icon],
+                    doctorStatus = it[Users.doctorStatus],
+                    category = Category(
+                        it[Users.categoryId],
+                        Categories.getCategoryById(it[Users.categoryId])!!.name)
+                )
+                PostInfo(
+                    id = it[id],
+                    user = user,
+                    title = it[title],
+                    text = it[text],
+                    category = Category(
+                        it[categoryId],
+                        it[Categories.name]
+                    ),
+                    timeAtCreation = it[timeAtCreation].toEpochMilli(),
+                    likesCount = it[likesCount],
+                    commentsCount = it[commentsCount],
+                    isLikeEnabled = false
+                )
+            }
+    }
+
+
 
 
     private fun resultRowToPost(row: ResultRow) = Post(
@@ -58,5 +137,9 @@ object Posts : Table("posts") {
         commentsCount = row[commentsCount]
     )
 
+}
+
+enum class PostSort {
+    TIME, LIKES
 }
 

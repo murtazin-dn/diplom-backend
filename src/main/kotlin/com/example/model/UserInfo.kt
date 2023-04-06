@@ -1,5 +1,6 @@
 package com.example.model
 
+import com.example.network.model.response.CategoryResponse
 import com.example.network.model.response.UserInfoResponse
 import kotlinx.serialization.Serializable
 
@@ -10,7 +11,7 @@ data class UserInfo(
     val surname: String,
     val icon: String?,
     val doctorStatus: Boolean,
-    val category: String
+    val category: Category
 ){
     fun toUserInfoResponse() = UserInfoResponse(
         id = this.id,
@@ -18,6 +19,7 @@ data class UserInfo(
         surname = this.surname,
         icon = this.icon,
         doctorStatus = this.doctorStatus,
-        category = this.category)
-    }
+        category = this.category.toCategoryResponse()
+    )
+}
 

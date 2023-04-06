@@ -17,7 +17,7 @@ class ChatControllerImpl : ChatController{
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
             val chatList = Chats.getChatListByUserWithUserInfo(userId)
-            HttpResponse.ok(ChatListResponse(chatList))
+            HttpResponse.ok(chatList)
         } catch (e: BadRequestException){
             HttpResponse.badRequest(e.message)
         }
