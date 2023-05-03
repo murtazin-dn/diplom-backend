@@ -4,6 +4,7 @@ import com.example.controller.MessagesController
 import com.example.database.model.Chats
 import com.example.database.model.Messages
 import com.example.model.Message
+import com.example.network.model.HttpResponse
 import com.example.network.model.request.MessageRequest
 import com.example.network.model.response.MessageListResponse
 import io.ktor.http.*
@@ -20,8 +21,12 @@ fun Route.configureMessageRouting() {
     val controller by inject<MessagesController>()
         route("chat/{chatId}/messages"){
             get{
-                val response = controller.getMessages(call)
-                call.respond(response.code, response.body)
+                controller.getMessages(call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
         }
         webSocket("/ws/chat/{chatId}") {

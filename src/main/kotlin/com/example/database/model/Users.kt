@@ -5,6 +5,8 @@ import com.example.model.Category
 import com.example.model.User
 import com.example.model.UserInfo
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.Instant
 
@@ -15,7 +17,7 @@ object Users: Table("users") {
     val name = varchar("name", 50)
     val surname = varchar("surname", 50)
     val dateOfBirthday = timestamp("date_of_birthday")
-    val categoryId = long("category_id")
+    val categoryId = long("category_id").references(Categories.id)
     val doctorStatus = bool("doctor_status")
     val icon = text("icon").nullable()
 
@@ -42,6 +44,20 @@ object Users: Table("users") {
             (Users.email eq email)
         }.mapNotNull { resultRowToUser(it) }
             .singleOrNull()
+    }
+
+    suspend fun findUsers(param: String): List<UserInfo> = dbQuery {
+        val text = param.lowercase()
+        val list = text.split(" ").map { "%$it%" }
+        val str = "%$text%"
+        val query = if(list.size == 2){
+            (((name.lowerCase() like list[0]) and (surname.lowerCase() like list[1])) or
+                    ((name.lowerCase() like list[0]) and (surname.lowerCase() like list[1])))
+        }else{
+            (name.lowerCase() like str) or (surname.lowerCase() like str)
+        }
+        Join(Users, Categories, onColumn = categoryId, otherColumn = Categories.id)
+            .select(query).mapNotNull { resultRowToUserInfo(it) }
     }
 
     suspend fun getUserById(id: Long): User? = dbQuery {
@@ -76,6 +92,7 @@ object Users: Table("users") {
         surname = row[surname],
         icon = row[icon],
         doctorStatus = row[doctorStatus],
+        dateOfBirthday = row[dateOfBirthday].toEpochMilli(),
         category = Category(
             row[categoryId],
             row[Categories.name]

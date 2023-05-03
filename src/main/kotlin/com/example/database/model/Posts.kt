@@ -32,11 +32,41 @@ object Posts : Table("posts") {
         insertStatement.resultedValues?.singleOrNull()?.let(Posts::resultRowToPost)
     }
 
-    suspend fun getPostById(id: Long): Post? = dbQuery {
-        Posts.select {
-            (Posts.id eq id)
-        }.mapNotNull { resultRowToPost(it) }
-            .singleOrNull()
+    suspend fun getPostById(id: Long): PostInfo? = dbQuery {
+        Join(
+            Posts, Users,
+            onColumn = Posts.userId, otherColumn = Users.id,
+            joinType = JoinType.INNER)
+            .join(
+                Categories, JoinType.INNER,
+                onColumn = Posts.categoryId, otherColumn = Categories.id,
+            ).select(Posts.id eq id).mapNotNull {
+                val user = UserInfo(
+                    id = it[Users.id],
+                    name = it[Users.name],
+                    surname = it[Users.surname],
+                    icon = it[Users.icon],
+                    doctorStatus = it[Users.doctorStatus],
+                    dateOfBirthday = it[Users.dateOfBirthday].toEpochMilli(),
+                    category = Category(
+                        it[Users.categoryId],
+                        Categories.getCategoryById(it[Users.categoryId])!!.name)
+                )
+                PostInfo(
+                    id = it[Posts.id],
+                    user = user,
+                    title = it[title],
+                    text = it[text],
+                    category = Category(
+                        it[categoryId],
+                        it[Categories.name]
+                    ),
+                    timeAtCreation = it[timeAtCreation].toEpochMilli(),
+                    likesCount = it[likesCount],
+                    commentsCount = it[commentsCount],
+                    isLikeEnabled = false
+                )
+            }.singleOrNull()
     }
 
     suspend fun deletePostById(id: Long): Int = dbQuery {
@@ -65,6 +95,7 @@ object Posts : Table("posts") {
                     surname = it[Users.surname],
                     icon = it[Users.icon],
                     doctorStatus = it[Users.doctorStatus],
+                    dateOfBirthday = it[Users.dateOfBirthday].toEpochMilli(),
                     category = Category(
                         it[Users.categoryId],
                         Categories.getCategoryById(it[Users.categoryId])!!.name
@@ -87,6 +118,49 @@ object Posts : Table("posts") {
             }
     }
 
+//    suspend fun getPostsByUserId(userId: Long): List<PostInfo> = dbQuery{
+//        val postCategory = Categories.alias("post_category")
+//        val userCategory = Categories.alias("user_category")
+//        Join(
+//            Posts, Users,
+//            onColumn = Posts.userId, otherColumn = Users.id,
+//            joinType = JoinType.INNER)
+//            .join(
+//                Categories, JoinType.INNER,
+//                onColumn = Posts.categoryId, otherColumn = Categories.id,
+//            ).join(
+//                userCategory, JoinType.INNER,
+//                onColumn = Users.categoryId, otherColumn = Categories.id,
+//            ).select(Posts.userId eq userId).mapNotNull {
+//                val user = UserInfo(
+//                    id = it[Users.id],
+//                    name = it[Users.name],
+//                    surname = it[Users.surname],
+//                    icon = it[Users.icon],
+//                    doctorStatus = it[Users.doctorStatus],
+//                    dateOfBirthday = it[Users.dateOfBirthday].toEpochMilli(),
+//                    category = Category(
+//                        it[Users.categoryId],
+//                        it[userCategory[Categories.name]]
+//                    )
+//                )
+//                PostInfo(
+//                    id = it[id],
+//                    user = user,
+//                    title = it[title],
+//                    text = it[text],
+//                    category = Category(
+//                        it[categoryId],
+//                        it[Categories.name]
+//                    ),
+//                    timeAtCreation = it[timeAtCreation].toEpochMilli(),
+//                    likesCount = it[likesCount],
+//                    commentsCount = it[commentsCount],
+//                    isLikeEnabled = false
+//                )
+//            }
+//    }
+
     suspend fun getPostsByUserId(userId: Long): List<PostInfo> = dbQuery{
         Join(
             Posts, Users,
@@ -102,6 +176,7 @@ object Posts : Table("posts") {
                     surname = it[Users.surname],
                     icon = it[Users.icon],
                     doctorStatus = it[Users.doctorStatus],
+                    dateOfBirthday = it[Users.dateOfBirthday].toEpochMilli(),
                     category = Category(
                         it[Users.categoryId],
                         Categories.getCategoryById(it[Users.categoryId])!!.name)

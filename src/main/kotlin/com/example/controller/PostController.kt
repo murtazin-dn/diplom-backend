@@ -4,12 +4,11 @@ import com.example.database.model.Categories
 import com.example.database.model.Posts
 import com.example.database.model.PostsComments
 import com.example.database.model.PostsLikes
-import com.example.model.Comment
-import com.example.model.Post
-import com.example.model.PostLike
+import com.example.model.*
 import com.example.network.model.HttpResponse
 import com.example.network.model.request.PostCommentRequest
 import com.example.network.model.request.PostRequest
+import com.example.network.model.response.CommentResponse
 import com.example.network.model.response.CommentsListResponse
 import com.example.network.model.response.IsLikeResponse
 import com.example.network.model.response.PostResponse
@@ -21,7 +20,7 @@ import io.ktor.server.request.*
 import java.time.Instant
 
 class PostControllerImpl: PostController {
-    override suspend fun createPost(postRequest: PostRequest, call: ApplicationCall): HttpResponse<Any>{
+    override suspend fun createPost(postRequest: PostRequest, call: ApplicationCall): HttpResponse<PostResponse>{
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -46,18 +45,23 @@ class PostControllerImpl: PostController {
         }
     }
 
-    override suspend fun getPostById(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getPostById(call: ApplicationCall): HttpResponse<PostInfo> {
         return try {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Long::class)!!
             val postId = call.parameters["postId"]?.toLongOrNull() ?: throw BadRequestException("Invalid param post id")
             Posts.getPostById(postId)?.let { post ->
-                HttpResponse.ok(post.toPostResponse())
+                PostsLikes.selectPostLike(PostLike(post.id, userId))?.let {
+                    post.isLikeEnabled = true
+                }
+                HttpResponse.ok(post)
             } ?: throw BadRequestException("Post with this id is absent")
         } catch (e: BadRequestException){
             HttpResponse.badRequest(e.message)
         }
     }
 
-    override suspend fun getPosts(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getPosts(call: ApplicationCall): HttpResponse<List<PostInfo>> {
         return try {
             val principal = call.principal<JWTPrincipal>()!!
             val userId = principal.getClaim("userId", Long::class)!!
@@ -82,7 +86,7 @@ class PostControllerImpl: PostController {
         }
     }
 
-    override suspend fun setLike(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun setLike(call: ApplicationCall): HttpResponse<String> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -104,7 +108,7 @@ class PostControllerImpl: PostController {
         }
     }
 
-    override suspend fun unsetLike(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun unsetLike(call: ApplicationCall): HttpResponse<String> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -121,7 +125,7 @@ class PostControllerImpl: PostController {
         }
     }
 
-    override suspend fun getLike(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getLike(call: ApplicationCall): HttpResponse<IsLikeResponse> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -136,7 +140,7 @@ class PostControllerImpl: PostController {
         }
     }
 
-    override suspend fun createComment(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun createComment(call: ApplicationCall): HttpResponse<CommentResponse> {
         return try{
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -159,12 +163,12 @@ class PostControllerImpl: PostController {
         }
     }
 
-    override suspend fun getComments(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getComments(call: ApplicationCall): HttpResponse<List<CommentPreview>> {
         return try{
             val postId = call.parameters["postId"]?.toLongOrNull() ?: throw BadRequestException("Invalid param post id")
             if(Posts.getPostById(postId) == null) throw BadRequestException("Post with this id is absent")
             val list = PostsComments.getCommentsByPostId(postId)
-            HttpResponse.ok(CommentsListResponse(list))
+            HttpResponse.ok(list)
         }catch (e: BadRequestException){
             HttpResponse.badRequest(e.message)
         }
@@ -182,12 +186,12 @@ class PostControllerImpl: PostController {
 
 
 interface PostController{
-    suspend fun createPost(postRequest: PostRequest, call: ApplicationCall): HttpResponse<Any>
-    suspend fun getPostById(call: ApplicationCall): HttpResponse<Any>
-    suspend fun getPosts(call: ApplicationCall): HttpResponse<Any>
-    suspend fun setLike(call: ApplicationCall): HttpResponse<Any>
-    suspend fun unsetLike(call: ApplicationCall): HttpResponse<Any>
-    suspend fun getLike(call: ApplicationCall): HttpResponse<Any>
-    suspend fun createComment(call: ApplicationCall): HttpResponse<Any>
-    suspend fun getComments(call: ApplicationCall): HttpResponse<Any>
+    suspend fun createPost(postRequest: PostRequest, call: ApplicationCall): HttpResponse<PostResponse>
+    suspend fun getPostById(call: ApplicationCall): HttpResponse<PostInfo>
+    suspend fun getPosts(call: ApplicationCall): HttpResponse<List<PostInfo>>
+    suspend fun setLike(call: ApplicationCall): HttpResponse<String>
+    suspend fun unsetLike(call: ApplicationCall): HttpResponse<String>
+    suspend fun getLike(call: ApplicationCall): HttpResponse<IsLikeResponse>
+    suspend fun createComment(call: ApplicationCall): HttpResponse<CommentResponse>
+    suspend fun getComments(call: ApplicationCall): HttpResponse<List<CommentPreview>>
 }

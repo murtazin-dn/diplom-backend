@@ -3,6 +3,7 @@ package com.example.controller
 import com.example.database.model.Subscribers
 import com.example.database.model.Users
 import com.example.model.Subscriber
+import com.example.model.UserInfo
 import com.example.network.model.HttpResponse
 import com.example.network.model.response.SubscribersResponse
 import com.example.utils.BadRequestException
@@ -11,18 +12,18 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 
 class SubscribersControllerImpl: SubscribersController{
-    override suspend fun getSubscribers(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getSubscribers(call: ApplicationCall): HttpResponse<List<UserInfo>> {
         return try{
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
             val subscribers = Subscribers.getSubscribersByUserId(userId)
-            HttpResponse.ok(SubscribersResponse(subscribers))
+            HttpResponse.ok(subscribers)
         }catch(e: Exception){
             HttpResponse.badRequest(e.message.toString())
         }
     }
 
-    override suspend fun subscribe(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun subscribe(call: ApplicationCall): HttpResponse<String> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -40,7 +41,7 @@ class SubscribersControllerImpl: SubscribersController{
         }
     }
 
-    override suspend fun unsubscribe(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun unsubscribe(call: ApplicationCall): HttpResponse<String> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -61,7 +62,7 @@ class SubscribersControllerImpl: SubscribersController{
 
 }
 interface SubscribersController {
-    suspend fun getSubscribers(call: ApplicationCall): HttpResponse<Any>
-    suspend fun subscribe(call: ApplicationCall): HttpResponse<Any>
-    suspend fun unsubscribe(call: ApplicationCall): HttpResponse<Any>
+    suspend fun getSubscribers(call: ApplicationCall): HttpResponse<List<UserInfo>>
+    suspend fun subscribe(call: ApplicationCall): HttpResponse<String>
+    suspend fun unsubscribe(call: ApplicationCall): HttpResponse<String>
 }

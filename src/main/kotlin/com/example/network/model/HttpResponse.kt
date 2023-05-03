@@ -2,34 +2,19 @@ package com.example.network.model
 
 import io.ktor.http.*
 
-sealed class HttpResponse<T> {
-    abstract val body: T
-    abstract val code: HttpStatusCode
+sealed class HttpResponse<out T> {
+    data class Success<T>(val body: T, val code: HttpStatusCode) : HttpResponse<T>()
+    data class Error(val message: String, val code: HttpStatusCode) : HttpResponse<Nothing>()
 
-    data class Ok<T>(override val body: T) : HttpResponse<T>() {
-        override val code: HttpStatusCode = HttpStatusCode.OK
-    }
-
-    data class NotFound<T>(override val body: T) : HttpResponse<T>() {
-        override val code: HttpStatusCode = HttpStatusCode.NotFound
-    }
-
-    data class BadRequest<T>(override val body: T) : HttpResponse<T>() {
-        override val code: HttpStatusCode = HttpStatusCode.BadRequest
-    }
-
-    data class Unauthorized<T>(override val body: T) : HttpResponse<T>() {
-        override val code: HttpStatusCode = HttpStatusCode.Unauthorized
-    }
 
     companion object {
-        fun <T> ok(response: T) = Ok(body = response)
+        fun <T> ok(response: T) = Success(body = response, code = HttpStatusCode.OK)
 
-        fun <T> notFound(response: T) = NotFound(body = response)
+        fun notFound(response: String) = Error(message = response, HttpStatusCode.NotFound)
 
-        fun <T> badRequest(response: T) = BadRequest(body = response)
+        fun badRequest(response: String) = Error(message = response, HttpStatusCode.BadRequest)
 
-        fun <T> unauth(response: T) = Unauthorized(body = response)
+        fun unauth(response: String) = Error(message = response, HttpStatusCode.Unauthorized)
     }
 }
 

@@ -9,7 +9,7 @@ import com.example.utils.NotFoundException
 import io.ktor.server.application.*
 
 class CategoriesControllerImpl: CategoriesController {
-    override suspend fun getCategories(): HttpResponse<Any> {
+    override suspend fun getCategories(): HttpResponse<List<CategoryResponse>> {
         return try {
             val categories = Categories.getCategoriesList()
             val list = categories.map { category ->
@@ -24,7 +24,7 @@ class CategoriesControllerImpl: CategoriesController {
         }
     }
 
-    override suspend fun getCategoryById(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getCategoryById(call: ApplicationCall): HttpResponse<CategoryResponse> {
         return try {
             val categoryId =
                 call.parameters["categoryId"]?.toLongOrNull() ?: throw BadRequestException("invalid param categoryId")
@@ -42,6 +42,6 @@ class CategoriesControllerImpl: CategoriesController {
 }
 
 interface CategoriesController {
-    suspend fun getCategories() : HttpResponse<Any>
-    suspend fun getCategoryById(call: ApplicationCall) : HttpResponse<Any>
+    suspend fun getCategories() : HttpResponse<List<CategoryResponse>>
+    suspend fun getCategoryById(call: ApplicationCall) : HttpResponse<CategoryResponse>
 }

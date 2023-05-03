@@ -9,6 +9,7 @@ data class UserInfoResponse(
     val surname: String,
     val category: CategoryResponse,
     val doctorStatus: Boolean,
+    val dateOfBirthday: Long,
     val icon: String?
 )
 

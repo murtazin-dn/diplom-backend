@@ -11,6 +11,7 @@ data class UserInfo(
     val surname: String,
     val icon: String?,
     val doctorStatus: Boolean,
+    val dateOfBirthday: Long,
     val category: Category
 ){
     fun toUserInfoResponse() = UserInfoResponse(
@@ -19,6 +20,7 @@ data class UserInfo(
         surname = this.surname,
         icon = this.icon,
         doctorStatus = this.doctorStatus,
+        dateOfBirthday = this.dateOfBirthday,
         category = this.category.toCategoryResponse()
     )
 }

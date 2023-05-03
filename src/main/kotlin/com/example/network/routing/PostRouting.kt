@@ -4,6 +4,7 @@ import com.example.controller.PostController
 import com.example.database.model.Categories
 import com.example.database.model.Posts
 import com.example.model.Post
+import com.example.network.model.HttpResponse
 import com.example.network.model.request.PostRequest
 import com.example.network.model.response.PostResponse
 import io.ktor.http.*
@@ -25,43 +26,75 @@ fun Route.configurePostRouting() {
 
             route("/{postId}/likes"){
                 get {
-                    val response = controller.getLike(call)
-                    call.respond(response.code, response.body)
+                    controller.getLike(call).let {response ->
+                        when(response){
+                            is HttpResponse.Error -> call.respond(response.code, response.message)
+                            is HttpResponse.Success -> call.respond(response.code, response.body)
+                        }
+                    }
                 }
                 post {
-                    val response = controller.setLike(call)
-                    call.respond(response.code, response.body)
+                    controller.setLike(call).let {response ->
+                        when(response){
+                            is HttpResponse.Error -> call.respond(response.code, response.message)
+                            is HttpResponse.Success -> call.respond(response.code, response.body)
+                        }
+                    }
                 }
                 delete {
-                    val response = controller.unsetLike(call)
-                    call.respond(response.code, response.body)
+                    controller.unsetLike(call).let {response ->
+                        when(response){
+                            is HttpResponse.Error -> call.respond(response.code, response.message)
+                            is HttpResponse.Success -> call.respond(response.code, response.body)
+                        }
+                    }
                 }
             }
             route("/{postId}/comments"){
                 get {
-                    val response = controller.getComments(call)
-                    call.respond(response.code, response.body)
+                    controller.getComments(call).let {response ->
+                        when(response){
+                            is HttpResponse.Error -> call.respond(response.code, response.message)
+                            is HttpResponse.Success -> call.respond(response.code, response.body)
+                        }
+                    }
                 }
                 post {
-                    val response = controller.createComment(call)
-                    call.respond(response.code, response.body)
+                    controller.createComment(call).let {response ->
+                        when(response){
+                            is HttpResponse.Error -> call.respond(response.code, response.message)
+                            is HttpResponse.Success -> call.respond(response.code, response.body)
+                        }
+                    }
                 }
             }
 
             post{
                 val request = call.receive<PostRequest>()
-                val response = controller.createPost(request, call)
-                call.respond(response.code, response.body)
+                controller.createPost(request, call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
 
             get("/{postId}") {
-                val response = controller.getPostById(call)
-                call.respond(response.code, response.body)
+                controller.getPostById(call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
 
             get{
-                val response = controller.getPosts(call)
-                call.respond(response.code, response.body)
+                controller.getPosts(call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
         }
 }

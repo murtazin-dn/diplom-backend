@@ -10,6 +10,7 @@ fun Application.configureRouting() {
         route("/api/v1"){
             configureAuthRouting()
             configureCategoryRouting()
+            configurePhotoRouting()
             authenticate("jwt") {
                 configureSubscribersRouting()
                 configurePostRouting()

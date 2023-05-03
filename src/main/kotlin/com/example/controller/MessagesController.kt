@@ -7,6 +7,7 @@ import com.example.model.Member
 import com.example.network.model.HttpResponse
 import com.example.network.model.request.MessageRequest
 import com.example.network.model.response.MessageListResponse
+import com.example.network.model.response.MessageResponse
 import com.example.utils.BadRequestException
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -21,15 +22,13 @@ class MessagesControllerImpl: MessagesController{
 
     private val chats = ConcurrentHashMap<Long, MutableList<Member>>()
 
-    override suspend fun getMessages(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getMessages(call: ApplicationCall): HttpResponse<List<MessageResponse>> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
             val chatId = call.parameters["chatId"]?.toLongOrNull() ?: throw BadRequestException("Invalid param chat id")
             val messages = Messages.getMessagesByChatId(chatId).map { it.messageToMessageResponse(userId) }
-            HttpResponse.ok(
-                MessageListResponse(messages)
-            )
+            HttpResponse.ok(messages)
         }catch (e: BadRequestException){
             HttpResponse.badRequest(e.message)
         }
@@ -64,8 +63,11 @@ class MessagesControllerImpl: MessagesController{
                 sendMessage(message!!)
             }
         } catch (e: Exception) {
+            println("ddddddddddddddddddddddddddddddddddd")
             println(e.localizedMessage)
+            println(e.stackTraceToString())
         } finally {
+            println("diiiiiiiiiiiiiiiiisconnect")
             disconnect(userId, chatId)
         }
     }
@@ -88,10 +90,15 @@ class MessagesControllerImpl: MessagesController{
     private suspend fun disconnect(userId: Long, chatId: Long){
         if(chats[chatId] != null){
             for(member in chats[chatId]!!){
-                if (member.userId == userId) member.session.close()
+                if (member.userId == userId) {
+                    member.session.close()
+                    chats[chatId]?.remove(member)
+                    println("sessiom close chatId: $chatId, userId: $userId")
+                }
             }
             if(chats[chatId]!!.none()){
                 chats.remove(chatId)
+                println("remove $chatId")
             }
         }
     }
@@ -99,6 +106,6 @@ class MessagesControllerImpl: MessagesController{
 }
 
 interface MessagesController {
-    suspend fun getMessages(call: ApplicationCall): HttpResponse<Any>
+    suspend fun getMessages(call: ApplicationCall): HttpResponse<List<MessageResponse>>
     suspend fun connect(call: ApplicationCall, ws: WebSocketServerSession, incoming: ReceiveChannel<Frame>)
 }

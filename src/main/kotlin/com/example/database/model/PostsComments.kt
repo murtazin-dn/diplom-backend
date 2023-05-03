@@ -1,8 +1,10 @@
 package com.example.database.model
 
 import com.example.database.DatabaseFactory.dbQuery
+import com.example.model.Category
 import com.example.model.Comment
 import com.example.model.CommentPreview
+import com.example.model.UserInfo
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.Instant
@@ -25,18 +27,16 @@ object PostsComments: Table("posts_comments") {
     }
 
     suspend fun getCommentsByPostId(id: Long): List<CommentPreview> = dbQuery {
-        val join = Join(
+        return@dbQuery Join(
             PostsComments, Posts,
             onColumn = postId, otherColumn = Posts.id,
             joinType = JoinType.INNER,
             additionalConstraint = { postId eq id})
             .join(Users, onColumn = userId, otherColumn = Users.id, joinType = JoinType.INNER,
                 additionalConstraint = { userId eq Users.id})
-
-        return@dbQuery join.slice(
-            PostsComments.id, postId, userId, text, date,
-            Users.name, Users.surname, Users.icon, Users.doctorStatus
-        )
+            .join(
+                Categories, JoinType.INNER,
+                onColumn = Users.categoryId, otherColumn = Categories.id)
             .selectAll().orderBy(date to SortOrder.ASC).mapNotNull { resultRowToCommentPreview(it) }
     }
 
@@ -50,13 +50,20 @@ object PostsComments: Table("posts_comments") {
 
     private fun resultRowToCommentPreview(row: ResultRow) = CommentPreview(
         id = row[id],
-        userId = row[userId],
         postId = row[postId],
         date = row[date].toEpochMilli(),
         text = row[text],
-        userName = row[Users.name],
-        userSurName = row[Users.surname],
-        icon = row[Users.icon],
-        doctorStatus = row[Users.doctorStatus]
+        user = UserInfo(
+            id = row[userId],
+            name = row[Users.name],
+            surname = row[Users.surname],
+            icon = row[Users.icon],
+            doctorStatus = row[Users.doctorStatus],
+            dateOfBirthday = row[Users.dateOfBirthday].toEpochMilli(),
+            category = Category(
+                id = row[Categories.id],
+                name = row[Categories.name]
+            )
         )
+    )
 }

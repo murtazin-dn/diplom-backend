@@ -1,6 +1,7 @@
 package com.example.network.routing
 
 import com.example.controller.CategoriesController
+import com.example.network.model.HttpResponse
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -12,12 +13,20 @@ fun Route.configureCategoryRouting(){
 
     route("/category"){
         get{
-            val response = controller.getCategories()
-            call.respond(response.code, response.body)
+            controller.getCategories().let {response ->
+                when(response){
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
+                }
+            }
         }
         get("/{categoryId}"){
-            val response = controller.getCategoryById(call)
-            call.respond(response.code, response.body)
+            controller.getCategoryById(call).let {response ->
+                when(response){
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
+                }
+            }
         }
     }
 }

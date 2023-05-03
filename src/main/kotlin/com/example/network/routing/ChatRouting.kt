@@ -3,6 +3,7 @@ package com.example.network.routing
 import com.example.controller.ChatController
 import com.example.database.model.Chats
 import com.example.model.Chat
+import com.example.network.model.HttpResponse
 import com.example.network.model.response.ChatListResponse
 import com.example.network.model.response.ChatResponse
 import io.ktor.http.*
@@ -19,16 +20,28 @@ fun Route.configureChatRouting() {
 
         route("/chats"){
             get("/chat/{chatId}"){
-                val response = controller.getChatByChatId(call)
-                call.respond(response.code, response.body)
+                controller.getChatByChatId(call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
             get("/user/{userId}"){
-                val response = controller.getChatByUserId(call)
-                call.respond(response.code, response.body)
+                controller.getChatByUserId(call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
             get(){
-                val response = controller.getChats(call)
-                call.respond(response.code, response.body)
+                controller.getChats(call).let {response ->
+                    when(response){
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
             }
         }
 

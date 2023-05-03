@@ -3,6 +3,7 @@ package com.example.controller
 import com.example.database.model.Chats
 import com.example.database.model.Users
 import com.example.model.Chat
+import com.example.model.ChatPreview
 import com.example.network.model.HttpResponse
 import com.example.network.model.response.ChatListResponse
 import com.example.network.model.response.ChatResponse
@@ -12,7 +13,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 
 class ChatControllerImpl : ChatController{
-    override suspend fun getChats(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getChats(call: ApplicationCall): HttpResponse<List<ChatPreview>> {
         return try{
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
@@ -23,7 +24,7 @@ class ChatControllerImpl : ChatController{
         }
     }
 
-    override suspend fun getChatByUserId(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getChatByUserId(call: ApplicationCall): HttpResponse<ChatResponse> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val firstUserId = principal?.getClaim("userId", Long::class)!!
@@ -51,7 +52,7 @@ class ChatControllerImpl : ChatController{
         }
     }
 
-    override suspend fun getChatByChatId(call: ApplicationCall): HttpResponse<Any> {
+    override suspend fun getChatByChatId(call: ApplicationCall): HttpResponse<ChatResponse> {
         return try {
             val principal = call.principal<JWTPrincipal>()
             val firstUserId = principal?.getClaim("userId", Long::class)!!
@@ -78,7 +79,7 @@ class ChatControllerImpl : ChatController{
 }
 
 interface ChatController{
-    suspend fun getChats(call: ApplicationCall): HttpResponse<Any>
-    suspend fun getChatByUserId(call: ApplicationCall): HttpResponse<Any>
-    suspend fun getChatByChatId(call: ApplicationCall): HttpResponse<Any>
+    suspend fun getChats(call: ApplicationCall): HttpResponse<List<ChatPreview>>
+    suspend fun getChatByUserId(call: ApplicationCall): HttpResponse<ChatResponse>
+    suspend fun getChatByChatId(call: ApplicationCall): HttpResponse<ChatResponse>
 }

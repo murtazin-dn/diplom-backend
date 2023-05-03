@@ -1,6 +1,7 @@
 package com.example.network.routing
 
 import com.example.controller.AuthController
+import com.example.network.model.HttpResponse
 import com.example.network.model.request.SignInRequest
 import com.example.network.model.request.SignUpRequest
 import io.ktor.http.*
@@ -18,17 +19,29 @@ fun Route.configureAuthRouting() {
 
     post("/signup") {
         val request = call.receive(SignUpRequest::class)
-        val response = controller.signUp(request)
-        call.respond(response.code, response.body)
+        controller.signUp(request).let {response ->
+            when(response){
+                is HttpResponse.Error -> call.respond(response.code, response.message)
+                is HttpResponse.Success -> call.respond(response.code, response.body)
+            }
+        }
     }
     post("/signin") {
         val request = call.receive(SignInRequest::class)
-        val response = controller.signIn(request)
-        call.respond(response.code, response.body)
+        controller.signIn(request).let {response ->
+            when(response){
+                is HttpResponse.Error -> call.respond(response.code, response.message)
+                is HttpResponse.Success -> call.respond(response.code, response.body)
+            }
+        }
     }
     get("/email/{email}") {
-        val response = controller.findEmail(call)
-        call.respond(response.code, response.body)
+        controller.findEmail(call).let {response ->
+            when(response){
+                is HttpResponse.Error -> call.respond(response.code, response.message)
+                is HttpResponse.Success -> call.respond(response.code, response.body)
+            }
+        }
     }
 
 }
