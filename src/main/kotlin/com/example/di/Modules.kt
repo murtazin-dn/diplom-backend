@@ -24,3 +24,6 @@ val messageModule = module {
 val categoryModule = module {
     single<CategoriesController> { CategoriesControllerImpl() }
 }
+val notificationModule = module {
+    single<NotificationsController> { NotificationsControllerImpl() }
+}

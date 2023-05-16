@@ -16,9 +16,10 @@ class UserInfoControllerImpl: UserInfoController{
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
             val text = call.parameters["text"] ?: throw BadRequestException("Invalid param text")
-            val list = Users.findUsers(text).map { userInfo ->
+            val list = mutableListOf<ProfileResponse>()
+            Users.findUsers(text).forEach { userInfo ->
                 val isSubscribe = Subscribers.getSubscribe(userId, userInfo.id) != null
-                ProfileResponse(userInfo.toUserInfoResponse(), isSubscribe)
+                if (userInfo.id != userId) list.add(ProfileResponse(userInfo.toUserInfoResponse(), isSubscribe))
             }
             HttpResponse.ok(list)
         }catch (e: BadRequestException){

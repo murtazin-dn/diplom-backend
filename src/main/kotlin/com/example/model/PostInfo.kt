@@ -12,5 +12,6 @@ data class PostInfo(
     val timeAtCreation: Long,
     val likesCount: Long,
     val commentsCount: Long,
-    var isLikeEnabled: Boolean
+    var isLikeEnabled: Boolean,
+    val images: MutableList<String>
 )

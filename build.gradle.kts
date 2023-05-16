@@ -40,6 +40,13 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 
+
+    //firebase
+    implementation("com.google.firebase:firebase-admin:9.0.0")
+
+    //slf4j
+//    implementation("org.slf4j:slf4j-simple:2.0.7")
+
     //koin
     implementation("io.insert-koin:koin-ktor:$koin_version")
     implementation("io.insert-koin:koin-logger-slf4j:$koin_version")

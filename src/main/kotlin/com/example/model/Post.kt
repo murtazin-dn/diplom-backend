@@ -12,8 +12,8 @@ data class Post(
     val timeAtCreation: Long,
     val likesCount: Long,
     val commentsCount: Long
-){
-    fun toPostResponse() = PostResponse(
+) {
+    fun toPostResponse(images: List<String>) = PostResponse(
         id = this.id,
         userId = this.userId,
         title = this.title,
@@ -21,6 +21,7 @@ data class Post(
         categoryId = this.categoryId,
         timeAtCreation = this.timeAtCreation,
         commentsCount = this.commentsCount,
-        likesCount = this.likesCount
+        likesCount = this.likesCount,
+        images = images
     )
 }

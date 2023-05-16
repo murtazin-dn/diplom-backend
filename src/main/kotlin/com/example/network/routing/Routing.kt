@@ -12,6 +12,7 @@ fun Application.configureRouting() {
             configureCategoryRouting()
             configurePhotoRouting()
             authenticate("jwt") {
+                configureNotificationsRouting()
                 configureSubscribersRouting()
                 configurePostRouting()
                 configureUserInfoRouting()

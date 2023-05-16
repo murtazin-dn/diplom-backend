@@ -35,7 +35,7 @@ class AuthControllerImpl: AuthController {
                 )
             )?.let { user ->
                 val token = JwtTokenService.generate(user.id)
-                HttpResponse.ok(AuthResponse(token))
+                HttpResponse.ok(AuthResponse(user.id, token))
             } ?: throw BadRequestException("Insertion failed")
 
         } catch (e: BadRequestException){
@@ -71,7 +71,7 @@ class AuthControllerImpl: AuthController {
                 if (!PasswordEncryptor.validatePassword(signInRequest.password,user.password))
                     throw UnauthorizedActivityException("Authentication failed: Invalid credentials")
                 val token = JwtTokenService.generate(user.id)
-                HttpResponse.ok(AuthResponse(token))
+                HttpResponse.ok(AuthResponse(user.id, token))
             } ?: throw UnauthorizedActivityException("Authentication failed: Invalid credentials")
         } catch (e: BadRequestException){
             HttpResponse.badRequest(e.message.toString())

@@ -21,60 +21,61 @@ fun Route.configureUserInfoRouting() {
 
     val controller by inject<UserInfoController>()
 
-        route("/users/info"){
-            get{
-                controller.getMyUserInfo(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
+    route("/users/info") {
+        get {
+            controller.getMyUserInfo(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
                 }
             }
         }
-        route("/users"){
-            get{
-                controller.findUsers(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
+    }
+    route("/users") {
+        get {
+            controller.findUsers(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
                 }
             }
         }
-        route("/users/info/{userId}"){
-            get{
-                controller.getUserInfo(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
+    }
+    route("/users/info/{userId}") {
+        get {
+            controller.getUserInfo(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
                 }
             }
         }
-        route("/users/photo"){
-            post {
-                val multipart = call.receiveMultipart()
-                var fileName: String? = null
-                try{
-                    multipart.forEachPart { partData ->
-                        when(partData){
-                            is PartData.FormItem -> throw BadRequestException("error upload image")
-                            is PartData.FileItem ->{
-                                fileName = partData.save("./users_photo/")
-                            }
-                            is PartData.BinaryItem -> throw BadRequestException("error upload image")
-                            is PartData.BinaryChannelItem -> throw BadRequestException("error upload image")
+    }
+    route("/users/photo") {
+        post {
+            val multipart = call.receiveMultipart()
+            var fileName: String? = null
+            try {
+                multipart.forEachPart { partData ->
+                    when (partData) {
+                        is PartData.FormItem -> throw BadRequestException("error upload image")
+                        is PartData.FileItem -> {
+                            fileName = partData.save("./users_photo/")
                         }
+
+                        is PartData.BinaryItem -> throw BadRequestException("error upload image")
+                        is PartData.BinaryChannelItem -> throw BadRequestException("error upload image")
                     }
-                    val userId = call.principal<JWTPrincipal>()!!.getClaim("userId", Long::class)!!
-                    Users.updatePhoto(userId, fileName!!)
-                    call.respond(HttpStatusCode.OK, mapOf("name" to fileName.toString()))
-                } catch (ex: Exception) {
-                    File("./users_photo/$fileName").delete()
-                    call.respond(HttpStatusCode.InternalServerError,"Error")
                 }
+//                    val userId = call.principal<JWTPrincipal>()!!.getClaim("userId", Long::class)!!
+//                    Users.updatePhoto(userId, fileName!!)
+                call.respond(HttpStatusCode.OK, mapOf("name" to fileName.toString()))
+            } catch (ex: Exception) {
+                File("./users_photo/$fileName").delete()
+                call.respond(HttpStatusCode.InternalServerError, "Error")
             }
         }
+    }
 }
 
 fun PartData.FileItem.save(path: String): String {
@@ -85,5 +86,6 @@ fun PartData.FileItem.save(path: String): String {
     folder.mkdir()
     println("Path = $path $fileName")
     File("$path$fileName").writeBytes(fileBytes)
+    println("Path = $path $fileName")
     return fileName
 }

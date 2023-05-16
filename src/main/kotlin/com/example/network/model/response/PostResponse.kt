@@ -11,6 +11,7 @@ data class PostResponse(
     val categoryId: Long,
     val timeAtCreation: Long,
     val likesCount: Long,
-    val commentsCount: Long
+    val commentsCount: Long,
+    val images: List<String>
 )
 
