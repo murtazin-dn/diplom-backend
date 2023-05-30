@@ -1,9 +1,6 @@
 package com.example.controller
 
-import com.example.database.model.Chats
-import com.example.database.model.FCMTokens
-import com.example.database.model.Messages
-import com.example.database.model.Users
+import com.example.database.model.*
 import com.example.model.Member
 import com.example.model.Message
 import com.example.model.NotificationMessage
@@ -86,7 +83,9 @@ class MessagesControllerImpl : MessagesController {
                         images = messageRequest.images.toMutableList()
                     )
                 )
-                sendMessage(message!!)
+                MessageImages.addImagesToMessage(message!!.id, messageRequest.images)
+                message.images.addAll(messageRequest.images)
+                sendMessage(message)
             }
         } catch (e: Exception) {
             println("ddddddddddddddddddddddddddddddddddd")
