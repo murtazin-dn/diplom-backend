@@ -5,12 +5,11 @@ import com.example.model.Category
 import com.example.model.User
 import com.example.model.UserInfo
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.Instant
 
-object Users: Table("users") {
+object Users : Table("users") {
     val id = long("id").autoIncrement()
     val password = varchar("password", 100)
     val email = varchar("email", 256)
@@ -21,7 +20,7 @@ object Users: Table("users") {
     val doctorStatus = bool("doctor_status")
     val icon = text("icon").nullable()
 
-    suspend fun insert(user: User) : User? = dbQuery {
+    suspend fun insert(user: User): User? = dbQuery {
         val insertStatement = Users.insert {
             it[password] = user.password
             it[email] = user.email
@@ -35,8 +34,8 @@ object Users: Table("users") {
         insertStatement.resultedValues?.singleOrNull()?.let(Users::resultRowToUser)
     }
 
-    suspend fun updatePhoto(userId: Long, photo: String): Boolean = dbQuery{
-        Users.update({ id eq userId }){ it[icon] = photo } > 0
+    suspend fun updatePhoto(userId: Long, photo: String): Boolean = dbQuery {
+        Users.update({ id eq userId }) { it[icon] = photo } > 0
     }
 
     suspend fun getUserByEmail(email: String): User? = dbQuery {
@@ -50,10 +49,10 @@ object Users: Table("users") {
         val text = param.lowercase()
         val list = text.split(" ").map { "%$it%" }
         val str = "%$text%"
-        val query = if(list.size == 2){
+        val query = if (list.size == 2) {
             (((name.lowerCase() like list[0]) and (surname.lowerCase() like list[1])) or
                     ((name.lowerCase() like list[0]) and (surname.lowerCase() like list[1])))
-        }else{
+        } else {
             (name.lowerCase() like str) or (surname.lowerCase() like str)
         }
         Join(Users, Categories, onColumn = categoryId, otherColumn = Categories.id)
@@ -69,7 +68,7 @@ object Users: Table("users") {
 
     suspend fun getUserInfo(id: Long): UserInfo? = dbQuery {
         Join(Users, Categories, onColumn = categoryId, otherColumn = Categories.id,
-            additionalConstraint = {Users.id eq id})
+            additionalConstraint = { Users.id eq id })
             .selectAll().mapNotNull { resultRowToUserInfo(it) }
             .singleOrNull()
     }

@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.javatime.timestamp
 import java.time.Instant
-import javax.jws.soap.SOAPBinding.Use
 
 object Posts : Table("posts") {
     val id = long("id").autoIncrement()
@@ -205,7 +204,9 @@ object Posts : Table("posts") {
             }
     }
 
-    suspend fun getPosts(): List<PostInfo> = dbQuery {
+    suspend fun getPosts(userid: Long): List<PostInfo> = dbQuery {
+        val postsMap: MutableMap<Long, PostInfo> = HashMap()
+        val postsList = mutableListOf<PostInfo>()
         Join(
             Posts, Users,
             onColumn = Posts.userId, otherColumn = Users.id,
@@ -214,7 +215,34 @@ object Posts : Table("posts") {
             .join(
                 Categories, JoinType.INNER,
                 onColumn = Posts.categoryId, otherColumn = Categories.id,
-            ).selectAll().orderBy(likesCount to SortOrder.DESC).mapNotNull {
+            )
+            .join(
+                PostImages, JoinType.LEFT,
+                onColumn = Posts.id, otherColumn = PostImages.postId
+            )
+            .leftJoin(PostsLikes, { Posts.id }, { PostsLikes.postId }, { PostsLikes.userId eq userid })
+            .slice(
+                Users.id,
+                Users.name,
+                Users.surname,
+                Users.icon,
+                Users.doctorStatus,
+                Users.dateOfBirthday,
+                categoryId,
+                Categories.name,
+                id,
+                title,
+                text,
+                timeAtCreation,
+                likesCount,
+                commentsCount,
+                PostsLikes.postId,
+                PostsLikes.userId,
+                PostImages.imageName
+//                likes
+            )
+            .selectAll().orderBy(likesCount to SortOrder.DESC).mapNotNull {
+                println(it[PostsLikes.postId].toString())
                 val user = UserInfo(
                     id = it[Users.id],
                     name = it[Users.name],
@@ -223,11 +251,11 @@ object Posts : Table("posts") {
                     doctorStatus = it[Users.doctorStatus],
                     dateOfBirthday = it[Users.dateOfBirthday].toEpochMilli(),
                     category = Category(
-                        it[Users.categoryId],
-                        Categories.getCategoryById(it[Users.categoryId])!!.name
+                        it[categoryId],
+                        it[Categories.name]
                     )
                 )
-                PostInfo(
+                val post = PostInfo(
                     id = it[id],
                     user = user,
                     title = it[title],
@@ -239,11 +267,65 @@ object Posts : Table("posts") {
                     timeAtCreation = it[timeAtCreation].toEpochMilli(),
                     likesCount = it[likesCount],
                     commentsCount = it[commentsCount],
-                    isLikeEnabled = false,
+                    isLikeEnabled = it[PostsLikes.postId] != null,
                     images = mutableListOf()
                 )
+                if (postsMap.contains(it[id])) {
+                    it[PostImages.imageName]?.let { image ->
+                        postsMap[it[id]]!!.images.add(image)
+                    }
+                } else {
+                    it[PostImages.imageName]?.let { image ->
+                        post.images.add(image)
+                    }
+                    postsMap[it[id]] = post
+                }
             }
+        postsMap.forEach {
+            postsList.add(it.value)
+        }
+        postsList
     }
+
+//    suspend fun getPosts(): List<PostInfo> = dbQuery {
+//        Join(
+//            Posts, Users,
+//            onColumn = Posts.userId, otherColumn = Users.id,
+//            joinType = JoinType.INNER
+//        )
+//            .join(
+//                Categories, JoinType.INNER,
+//                onColumn = Posts.categoryId, otherColumn = Categories.id,
+//            ).selectAll().orderBy(likesCount to SortOrder.DESC).mapNotNull {
+//                val user = UserInfo(
+//                    id = it[Users.id],
+//                    name = it[Users.name],
+//                    surname = it[Users.surname],
+//                    icon = it[Users.icon],
+//                    doctorStatus = it[Users.doctorStatus],
+//                    dateOfBirthday = it[Users.dateOfBirthday].toEpochMilli(),
+//                    category = Category(
+//                        it[Users.categoryId],
+//                        Categories.getCategoryById(it[Users.categoryId])!!.name
+//                    )
+//                )
+//                PostInfo(
+//                    id = it[id],
+//                    user = user,
+//                    title = it[title],
+//                    text = it[text],
+//                    category = Category(
+//                        it[categoryId],
+//                        it[Categories.name]
+//                    ),
+//                    timeAtCreation = it[timeAtCreation].toEpochMilli(),
+//                    likesCount = it[likesCount],
+//                    commentsCount = it[commentsCount],
+//                    isLikeEnabled = false,
+//                    images = mutableListOf()
+//                )
+//            }
+//    }
 
     suspend fun getPostsByCategoryId(categoryId: Long): List<PostInfo> = dbQuery {
         Join(

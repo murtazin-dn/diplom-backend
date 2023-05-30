@@ -18,31 +18,39 @@ fun Route.configureChatRouting() {
 
     val controller by inject<ChatController>()
 
-        route("/chats"){
-            get("/chat/{chatId}"){
-                controller.getChatByChatId(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
-                }
-            }
-            get("/user/{userId}"){
-                controller.getChatByUserId(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
-                }
-            }
-            get(){
-                controller.getChats(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
+    route("/chats") {
+        get("/chat/{chatId}") {
+            controller.getChatByChatId(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
                 }
             }
         }
+        get("/user/{userId}") {
+            controller.getChatByUserId(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
+                }
+            }
+        }
+        get("/unreadcount") {
+            controller.getUnreadDialogsCount(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
+                }
+            }
+        }
+        get() {
+            controller.getChats(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
+                }
+            }
+        }
+    }
 
 }

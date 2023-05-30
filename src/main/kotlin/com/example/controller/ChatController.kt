@@ -12,14 +12,25 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 
-class ChatControllerImpl : ChatController{
-    override suspend fun getChats(call: ApplicationCall): HttpResponse<List<ChatPreview>> {
-        return try{
+class ChatControllerImpl : ChatController {
+    override suspend fun getUnreadDialogsCount(call: ApplicationCall): HttpResponse<Long> {
+        return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
-            val chatList = Chats.getChatListByUserWithUserInfo(userId)
+            val chatList = Chats.getUnreadChatsCount(userId)
             HttpResponse.ok(chatList)
-        } catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
+            HttpResponse.badRequest(e.message)
+        }
+    }
+
+    override suspend fun getChats(call: ApplicationCall): HttpResponse<List<ChatPreview>> {
+        return try {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", Long::class)!!
+            val chatList = Chats.getChatListByUserWithUserInfo(userId).sortedByDescending { it.lastMessage.date }
+            HttpResponse.ok(chatList)
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message)
         }
     }
@@ -47,7 +58,7 @@ class ChatControllerImpl : ChatController{
                     secondUser = userInfo.toUserInfoResponse()
                 )
             )
-        }catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message)
         }
     }
@@ -60,7 +71,7 @@ class ChatControllerImpl : ChatController{
                 ?: throw BadRequestException("Invalid param chat id")
             val chat = Chats.getChatById(chatId)
                 ?: throw BadRequestException("Chat with this id does not exists")
-            val secondUser = when{
+            val secondUser = when {
                 (firstUserId == chat.firstUserId) -> Users.getUserInfo(chat.secondUserId)
                 (firstUserId == chat.secondUserId) -> Users.getUserInfo(chat.firstUserId)
                 else -> throw BadRequestException("Error")
@@ -72,13 +83,14 @@ class ChatControllerImpl : ChatController{
                     secondUser = secondUser.toUserInfoResponse()
                 )
             )
-        }catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message)
         }
     }
 }
 
-interface ChatController{
+interface ChatController {
+    suspend fun getUnreadDialogsCount(call: ApplicationCall): HttpResponse<Long>
     suspend fun getChats(call: ApplicationCall): HttpResponse<List<ChatPreview>>
     suspend fun getChatByUserId(call: ApplicationCall): HttpResponse<ChatResponse>
     suspend fun getChatByChatId(call: ApplicationCall): HttpResponse<ChatResponse>

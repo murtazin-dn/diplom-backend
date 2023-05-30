@@ -8,6 +8,7 @@ import com.example.model.Member
 import com.example.model.Message
 import com.example.model.NotificationMessage
 import com.example.network.model.HttpResponse
+import com.example.network.model.request.MessageRequest
 import com.example.network.model.response.ChatResponse
 import com.example.network.model.response.MessageResponse
 import com.example.utils.BadRequestException
@@ -19,6 +20,7 @@ import io.ktor.server.request.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
@@ -32,8 +34,24 @@ class MessagesControllerImpl : MessagesController {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
             val chatId = call.parameters["chatId"]?.toLongOrNull() ?: throw BadRequestException("Invalid param chat id")
-            val messages = Messages.getMessagesByChatId(chatId).map { it.messageToMessageResponse(userId) }
+            val messages =
+                Messages.getMessagesByChatId(chatId).map { it.messageToMessageResponse(userId) }
+                    .sortedByDescending { it.date }
             HttpResponse.ok(messages)
+        } catch (e: BadRequestException) {
+            HttpResponse.badRequest(e.message)
+        }
+    }
+
+    override suspend fun readMessage(call: ApplicationCall): HttpResponse<String> {
+        return try {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", Long::class)!!
+            val chatId = call.parameters["chatId"]?.toLongOrNull() ?: throw BadRequestException("Invalid param chat id")
+            val messageId = call.parameters["messageId"]?.toLongOrNull()
+                ?: throw BadRequestException("param messageId is absent")
+            Messages.readMessage(chatId, messageId, userId)
+            HttpResponse.ok("")
         } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message)
         }
@@ -56,13 +74,16 @@ class MessagesControllerImpl : MessagesController {
             for (frame in incoming) {
                 frame as? Frame.Text ?: continue
                 val receivedText = frame.readText()
+                val messageRequest = Json.decodeFromString<MessageRequest>(receivedText)
                 val message = Messages.createMessage(
                     Message(
                         id = 0,
                         chatId = chatId,
                         userId = userId,
-                        text = receivedText,
-                        date = System.currentTimeMillis() / 1000
+                        text = messageRequest.text,
+                        date = System.currentTimeMillis() / 1000,
+                        isRead = false,
+                        images = messageRequest.images.toMutableList()
                     )
                 )
                 sendMessage(message!!)
@@ -165,7 +186,7 @@ class MessagesControllerImpl : MessagesController {
 
 
     private suspend fun disconnect(userId: Long, chatId: Long) {
-        if (chats[chatId] != null) {
+        chats[chatId]?.let {
             for (member in chats[chatId]!!) {
                 if (member.userId == userId) {
                     member.session.close()
@@ -183,6 +204,7 @@ class MessagesControllerImpl : MessagesController {
 }
 
 interface MessagesController {
+    suspend fun readMessage(call: ApplicationCall): HttpResponse<String>
     suspend fun getMessages(call: ApplicationCall): HttpResponse<List<MessageResponse>>
     suspend fun connect(call: ApplicationCall, ws: WebSocketServerSession, incoming: ReceiveChannel<Frame>)
 }

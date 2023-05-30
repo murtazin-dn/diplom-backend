@@ -5,13 +5,12 @@ import com.example.model.PostLike
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
-object PostsLikes: Table("posts_likes") {
-    val postId = long("post_id")
-    val userId = long("user_id")
+object PostsLikes : Table("posts_likes") {
+    val postId = long("post_id").nullable()
+    val userId = long("user_id").nullable()
 
 
-
-    suspend fun insertPostLike(postLike: PostLike): PostLike? = dbQuery{
+    suspend fun insertPostLike(postLike: PostLike): PostLike? = dbQuery {
         val insertStatement = PostsLikes.insert {
             it[postId] = postLike.postId
             it[userId] = postLike.userId
@@ -20,7 +19,7 @@ object PostsLikes: Table("posts_likes") {
     }
 
     suspend fun selectPostLike(postLike: PostLike): PostLike? = dbQuery {
-        PostsLikes.select{
+        PostsLikes.select {
             (postId eq postLike.postId) and
                     (userId eq postLike.userId)
         }.mapNotNull { resultRowToPostLike(it) }
@@ -28,11 +27,11 @@ object PostsLikes: Table("posts_likes") {
     }
 
     suspend fun deletePostLike(postLike: PostLike): Int = dbQuery {
-        PostsLikes.deleteWhere {(postId eq postLike.postId) and (userId eq postLike.userId) }
+        PostsLikes.deleteWhere { (postId eq postLike.postId) and (userId eq postLike.userId) }
     }
 
-    private fun resultRowToPostLike(row: ResultRow) = PostLike (
-        postId = row[postId],
-        userId = row[userId]
-        )
+    private fun resultRowToPostLike(row: ResultRow) = PostLike(
+        postId = row[postId]!!,
+        userId = row[userId]!!
+    )
 }

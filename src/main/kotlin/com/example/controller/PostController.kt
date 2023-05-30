@@ -76,9 +76,7 @@ class PostControllerImpl : PostController {
                 return HttpResponse.ok(posts)
             }
             call.request.queryParameters["all"]?.toBooleanStrict()?.let {
-                val posts = Posts.getPosts().map { post ->
-                    addInfoToPost(post, userId)
-                }
+                val posts = Posts.getPosts(userId)
                 println("all")
                 return HttpResponse.ok(posts)
             }

@@ -1,6 +1,7 @@
 package com.example.database
 
 import com.example.database.model.*
+import com.example.model.Message
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -9,11 +10,18 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object DatabaseFactory {
     fun init() {
+//        val database = Database.connect(
+//            "jdbc:postgresql://pg3.sweb.ru:5432/megashlang",
+//            driver = "org.postgresql.Driver",
+//            user = "megashlang",
+//            password = "2QBGKVE^UJWCFm4A"
+//        )
         val database = Database.connect(
             "jdbc:postgresql://127.0.0.1:5432/postgres",
             driver = "org.postgresql.Driver",
             user = "postgres",
-            password = "rootroot")
+            password = "rootroot"
+        )
         transaction(database) {
             SchemaUtils.create(Users)
             SchemaUtils.create(Posts)

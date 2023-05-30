@@ -19,18 +19,30 @@ import org.koin.ktor.ext.inject
 
 fun Route.configureMessageRouting() {
     val controller by inject<MessagesController>()
-        route("chat/{chatId}/messages"){
-            get{
-                controller.getMessages(call).let {response ->
-                    when(response){
+    route("/chat/{chatId}") {
+        route("/messages") {
+            get {
+                controller.getMessages(call).let { response ->
+                    when (response) {
                         is HttpResponse.Error -> call.respond(response.code, response.message)
                         is HttpResponse.Success -> call.respond(response.code, response.body)
                     }
                 }
             }
         }
-        webSocket("/ws/chat/{chatId}") {
-            controller.connect(call, this, incoming)
+        route("/read/{messageId}") {
+            get {
+                controller.readMessage(call).let { response ->
+                    when (response) {
+                        is HttpResponse.Error -> call.respond(response.code, response.message)
+                        is HttpResponse.Success -> call.respond(response.code, response.body)
+                    }
+                }
+            }
         }
+    }
+    webSocket("/ws/chat/{chatId}") {
+        controller.connect(call, this, incoming)
+    }
 
 }

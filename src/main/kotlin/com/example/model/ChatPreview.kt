@@ -1,5 +1,6 @@
 package com.example.model
 
+import com.example.network.model.response.MessageResponse
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,6 +10,7 @@ data class ChatPreview(
     val name: String,
     val surname: String,
     val icon: String?,
-    val lastMessageText: String?,
-    val lastMessageDate: Long?
+    val unreadMessagesCount: Long,
+    val lastMessage: MessageResponse
+
 )
