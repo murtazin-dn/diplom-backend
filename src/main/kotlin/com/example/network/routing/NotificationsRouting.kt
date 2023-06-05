@@ -8,20 +8,27 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
 
-fun Route.configureNotificationsRouting(){
+fun Route.configureNotificationsRouting() {
 
     val controller by inject<NotificationsController>()
 
-    route("/notifications"){
-        route("/subscribe"){
-            post{
-                controller.subscribeNotification(call).let {response ->
-                    when(response){
-                        is HttpResponse.Error -> call.respond(response.code, response.message)
-                        is HttpResponse.Success -> call.respond(response.code, response.body)
-                    }
+    route("/notifications") {
+        post("/subscribe") {
+            controller.subscribeNotification(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
+                }
+            }
+        }
+        post("/unsubscribe") {
+            controller.unsubscribeNotification(call).let { response ->
+                when (response) {
+                    is HttpResponse.Error -> call.respond(response.code, response.message)
+                    is HttpResponse.Success -> call.respond(response.code, response.body)
                 }
             }
         }
     }
+
 }

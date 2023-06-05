@@ -83,6 +83,34 @@ object Messages : Table("messages") {
         messagesList
     }
 
+    suspend fun getMessagesFromMessageId(chatId: Long, messageId: Long): List<Message> = dbQuery {
+        val messagesMap: MutableMap<Long, Message> = HashMap()
+        val messagesList = mutableListOf<Message>()
+        Messages.join(
+            MessageImages, JoinType.LEFT,
+            onColumn = Messages.id, otherColumn = MessageImages.messageId
+        ).select {
+            ((Messages.chatId eq chatId) and (Messages.id greater messageId))
+        }.orderBy(date to SortOrder.DESC)
+            .mapNotNull {
+                val message = resultRowToMessage(it)
+                if (messagesMap.contains(it[Messages.id])) {
+                    it[MessageImages.imageName]?.let { image ->
+                        messagesMap[it[Messages.id]]!!.images.add(image)
+                    }
+                } else {
+                    it[MessageImages.imageName]?.let { image ->
+                        message.images.add(image)
+                    }
+                    messagesMap[it[Messages.id]] = message
+                }
+            }
+        messagesMap.forEach {
+            messagesList.add(it.value)
+        }
+        messagesList
+    }
+
 
     private fun resultRowToMessage(row: ResultRow) = Message(
         id = row[id],

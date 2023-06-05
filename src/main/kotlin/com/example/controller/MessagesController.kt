@@ -31,9 +31,11 @@ class MessagesControllerImpl : MessagesController {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", Long::class)!!
             val chatId = call.parameters["chatId"]?.toLongOrNull() ?: throw BadRequestException("Invalid param chat id")
-            val messages =
-                Messages.getMessagesByChatId(chatId).map { it.messageToMessageResponse(userId) }
+            val messages = call.request.queryParameters["messageId"]?.toLongOrNull()?.let { messageId ->
+                Messages.getMessagesFromMessageId(chatId, messageId).map { it.messageToMessageResponse(userId) }
                     .sortedByDescending { it.date }
+            } ?: Messages.getMessagesByChatId(chatId).map { it.messageToMessageResponse(userId) }
+                .sortedByDescending { it.date }
             HttpResponse.ok(messages)
         } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message)

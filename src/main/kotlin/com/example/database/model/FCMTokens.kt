@@ -2,10 +2,8 @@ package com.example.database.model
 
 import com.example.database.DatabaseFactory.dbQuery
 import com.example.model.FCMToken
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 object FCMTokens : Table("fcm_tokens") {
     val userId = long("user_id")
@@ -17,6 +15,10 @@ object FCMTokens : Table("fcm_tokens") {
             it[token] = fcmToken.token
         }
         insertStatement.resultedValues?.singleOrNull()?.let { resultRowToFCMToken(it) }
+    }
+
+    suspend fun deleteToken(token: String): Int = dbQuery {
+        FCMTokens.deleteWhere { FCMTokens.token eq token }
     }
 
     suspend fun getTokensByUserId(id: Long): List<String> = dbQuery {

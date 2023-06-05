@@ -10,12 +10,10 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 
-class NotificationsControllerImpl: NotificationsController {
-}
+class NotificationsControllerImpl : NotificationsController {
 
-interface NotificationsController {
-    suspend fun subscribeNotification(call: ApplicationCall): HttpResponse<String>{
-        return try{
+    override suspend fun subscribeNotification(call: ApplicationCall): HttpResponse<String> {
+        return try {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal!!.getClaim("userId", Long::class)!!
             val token = call.receive<FCMTokenRequest>()
@@ -25,8 +23,23 @@ interface NotificationsController {
             )?.let {
                 HttpResponse.ok("")
             } ?: HttpResponse.badRequest("")
-        }catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message)
         }
     }
+
+    override suspend fun unsubscribeNotification(call: ApplicationCall): HttpResponse<String> {
+        return try {
+            val token = call.receive<FCMTokenRequest>()
+            FCMTokens.deleteToken(token.token)
+            HttpResponse.ok("")
+        } catch (e: BadRequestException) {
+            HttpResponse.badRequest(e.message)
+        }
+    }
+}
+
+interface NotificationsController {
+    suspend fun subscribeNotification(call: ApplicationCall): HttpResponse<String>
+    suspend fun unsubscribeNotification(call: ApplicationCall): HttpResponse<String>
 }
