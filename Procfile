@@ -1,0 +1,1 @@
+web: ./build/install/com.example.example/bin/com.example.example

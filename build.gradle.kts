@@ -1,4 +1,3 @@
-
 val ktor_version: String by project
 val koin_version: String by project
 val kotlin_version: String by project
@@ -10,7 +9,7 @@ val bcrypt_version: String by project
 plugins {
     kotlin("jvm") version "1.8.10"
     id("io.ktor.plugin") version "2.2.4"
-                id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
 }
 
 group = "com.example"
@@ -24,6 +23,10 @@ application {
 
 repositories {
     mavenCentral()
+}
+
+tasks {
+    create("stage").dependsOn("installDist")
 }
 
 dependencies {
@@ -60,7 +63,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
 
-    
+
     //postgresql
     implementation("org.postgresql:postgresql:$postgresql_version")
 }

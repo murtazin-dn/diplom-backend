@@ -15,9 +15,9 @@ import com.example.utils.isNameValid
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 
-class AuthControllerImpl: AuthController {
+class AuthControllerImpl : AuthController {
     override suspend fun signUp(signUpRequest: SignUpRequest): HttpResponse<AuthResponse> {
-        return try{
+        return try {
             validateSignUpFieldsOrThrowException(signUpRequest)
             isUserExist(signUpRequest.email)
             val hashPass = PasswordEncryptor.encryptPassword(signUpRequest.password)
@@ -38,10 +38,11 @@ class AuthControllerImpl: AuthController {
                 HttpResponse.ok(AuthResponse(user.id, token))
             } ?: throw BadRequestException("Insertion failed")
 
-        } catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message.toString())
         }
     }
+
     private fun validateSignUpFieldsOrThrowException(
         signUpRequest: SignUpRequest
     ) {
@@ -49,6 +50,7 @@ class AuthControllerImpl: AuthController {
             (signUpRequest.email.isBlank() or (signUpRequest.name.isBlank()) or
                     (signUpRequest.password.isBlank()) or (signUpRequest.confirmPassword.isBlank()) or
                     (signUpRequest.surname.isBlank())) -> "Fields should not be blank"
+
             (!signUpRequest.email.isEmailValid()) -> "Email invalid"
             (!signUpRequest.name.isNameValid()) -> "No special characters allowed in name"
             (!signUpRequest.surname.isNameValid()) -> "No special characters allowed in surname"
@@ -60,36 +62,37 @@ class AuthControllerImpl: AuthController {
 
         throw BadRequestException(message)
     }
+
     private suspend fun isUserExist(email: String) {
-        if(Users.getUserByEmail(email) != null) throw BadRequestException("user with this email already exists")
+        if (Users.getUserByEmail(email) != null) throw BadRequestException("user with this email already exists")
     }
 
     override suspend fun signIn(signInRequest: SignInRequest): HttpResponse<AuthResponse> {
-        return try{
+        return try {
             validateSignInFieldsOrThrowException(signInRequest)
-            Users.getUserByEmail(signInRequest.email)?.let {user ->
-                if (!PasswordEncryptor.validatePassword(signInRequest.password,user.password))
+            Users.getUserByEmail(signInRequest.email)?.let { user ->
+                if (!PasswordEncryptor.validatePassword(signInRequest.password, user.password))
                     throw UnauthorizedActivityException("Authentication failed: Invalid credentials")
                 val token = JwtTokenService.generate(user.id)
                 HttpResponse.ok(AuthResponse(user.id, token))
             } ?: throw UnauthorizedActivityException("Authentication failed: Invalid credentials")
-        } catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message.toString())
-        } catch (e: UnauthorizedActivityException){
+        } catch (e: UnauthorizedActivityException) {
             HttpResponse.unauth(e.message)
         }
     }
 
     override suspend fun findEmail(call: ApplicationCall): HttpResponse<EmailTakenResponse> {
-        return try{
+        return try {
             val email = call.parameters["email"] ?: throw BadRequestException("Param email is exists")
-            if(!email.isEmailValid()) throw BadRequestException("Invalid param email")
+            if (!email.isEmailValid()) throw BadRequestException("Invalid param email")
             Users.getUserByEmail(email)?.let {
                 HttpResponse.ok(EmailTakenResponse(true))
             } ?: HttpResponse.ok(EmailTakenResponse(false))
-        } catch (e: BadRequestException){
+        } catch (e: BadRequestException) {
             HttpResponse.badRequest(e.message.toString())
-        } catch (e: Exception){
+        } catch (e: Exception) {
             HttpResponse.badRequest(e.message.toString())
         }
     }
@@ -104,15 +107,15 @@ class AuthControllerImpl: AuthController {
 
             else -> return
         }
-
         throw BadRequestException(message)
     }
 
 
-    private fun validateDateOfBirthday(dateOfBirthday: Long){
+    private fun validateDateOfBirthday(dateOfBirthday: Long) {
         TODO()
     }
 }
+
 interface AuthController {
     suspend fun signUp(signUpRequest: SignUpRequest): HttpResponse<AuthResponse>
     suspend fun signIn(signInRequest: SignInRequest): HttpResponse<AuthResponse>
