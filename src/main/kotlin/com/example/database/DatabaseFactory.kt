@@ -16,10 +16,16 @@ object DatabaseFactory {
 //            user = "megashlang",
 //            password = "2QBGKVE^UJWCFm4A"
 //        )
+//        val database = Database.connect(
+//            "jdbc:postgresql://127.0.0.1:5432/postgres",
+//            driver = "org.postgresql.Driver",
+//            user = "postgres",
+//            password = "rootroot"
+//        )
         val database = Database.connect(
-            "postgresql://containers-us-west-96.railway.app:6472/railway",
+            "jdbc:postgresql://containers-us-west-96.railway.app:6472/railway",
             driver = "org.postgresql.Driver",
-            user = "postgres"
+            user = "postgres",
             password = "cV1mce1BpIitfVqxPm5x"
         )
         transaction(database) {
