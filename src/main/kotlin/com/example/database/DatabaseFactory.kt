@@ -28,6 +28,8 @@ object DatabaseFactory {
             user = "postgres",
             password = "cV1mce1BpIitfVqxPm5x"
         )
+
+
         transaction(database) {
             SchemaUtils.create(Users)
             SchemaUtils.create(Posts)
