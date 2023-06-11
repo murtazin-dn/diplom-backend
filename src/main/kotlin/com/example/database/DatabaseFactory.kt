@@ -17,7 +17,7 @@ object DatabaseFactory {
 //            password = "2QBGKVE^UJWCFm4A"
 //        )
         val database = Database.connect(
-            "postgresql://postgres:cV1mce1BpIitfVqxPm5x@containers-us-west-96.railway.app:6472/railway",
+            "postgresql://containers-us-west-96.railway.app:6472/railway",
             driver = "org.postgresql.Driver",
             user = "postgres"
             password = "cV1mce1BpIitfVqxPm5x"
